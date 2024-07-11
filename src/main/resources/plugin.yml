@@ -2,3 +2,5 @@ name: CordellDB.EXMPL
 version: '${project.version}'
 main: org.cordell.com.cordelldb.CordellDB
 api-version: '1.21'
+authors: [ j1sk1ss ]
+description: Light data manager for minecraft plugins
