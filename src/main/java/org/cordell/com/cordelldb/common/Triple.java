@@ -1,4 +1,4 @@
-package org.cordell.com.anizottieconomy.common;
+package org.cordell.com.cordelldb.common;
 
 public class Triple<X, Y, Z> {
     public Triple(X x, Y y, Z z) {

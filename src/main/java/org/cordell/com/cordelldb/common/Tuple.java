@@ -1,4 +1,4 @@
-package org.cordell.com.anizottieconomy.common;
+package org.cordell.com.cordelldb.common;
 
 public class Tuple<X, Y> {
     public Tuple(X x, Y y) {

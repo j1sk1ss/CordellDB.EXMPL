@@ -1,17 +1,16 @@
-package org.cordell.com.anizottieconomy.db;
+package org.cordell.com.cordelldb.manager;
 
-import org.cordell.com.anizottieconomy.common.Triple;
+import org.cordell.com.cordelldb.common.Triple;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import java.util.Scanner;
 
 
-public class DataManager {
-    public DataManager(String location, String fileName) {
+public class Manager {
+    public Manager(String location, String fileName) {
         Path = location;
         FileName = fileName;
 
