@@ -1,0 +1,4 @@
+name: CordellDB.EXMPL
+version: '${project.version}'
+main: org.cordell.com.cordelldb.CordellDB
+api-version: '1.21'
