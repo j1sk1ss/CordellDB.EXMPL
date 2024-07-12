@@ -31,7 +31,7 @@ public class Manager {
      * @param value Value
      * @throws IOException Exception when something goes wrong
      */
-    public void AddRecord(String key, String value) throws IOException {
+    public void addRecord(String key, String value) throws IOException {
         if (getRecord(key) == null)
             addLine2File(key + ":" + value);
     }
@@ -42,7 +42,7 @@ public class Manager {
      * @param value New value of key
      * @throws IOException Exception when something goes wrong
      */
-    public void SetRecord(String key, String value) throws IOException {
+    public void setRecord(String key, String value) throws IOException {
         var val = getRecord(key);
         if (val== null) return;
 
