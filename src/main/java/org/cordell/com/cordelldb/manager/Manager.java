@@ -2,11 +2,9 @@ package org.cordell.com.cordelldb.manager;
 
 import org.cordell.com.cordelldb.common.Triple;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Scanner;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 
 public class Manager {
@@ -33,27 +31,9 @@ public class Manager {
      * @param value Value
      * @throws IOException Exception when something goes wrong
      */
-    public void AddKey(String key, String value) throws IOException {
-        if (GetValue(key) == null) AppendLine(key + ":" + value);
-    }
-
-    /**
-     * Rewrite all db without key
-     * @param key Key for delete
-     * @throws IOException Exception when something goes wrong
-     */
-    public void DeleteKey(String key) throws IOException {
-        var key2delete = GetValue(key);
-        if (key2delete == null) return;
-
-        var data = LoadData().split("\n");
-        var cleanData = new StringBuilder();
-        for (var i = 0; i < data.length; i++) {
-            if (i == key2delete.x) continue;
-            cleanData.append(data[i]).append("\n");
-        }
-
-        SaveData(cleanData.toString());
+    public void AddRecord(String key, String value) throws IOException {
+        if (getRecord(key) == null)
+            addLine2File(key + ":" + value);
     }
 
     /**
@@ -62,23 +42,34 @@ public class Manager {
      * @param value New value of key
      * @throws IOException Exception when something goes wrong
      */
-    public void SetValue(String key, String value) throws IOException {
-        var val = GetValue(key);
+    public void SetRecord(String key, String value) throws IOException {
+        var val = getRecord(key);
         if (val== null) return;
 
-        var data = LoadData().split("\n");
+        var data = load().split("\n");
         data[val.x] = val.y + ":" + value;
+        putLine2File(val.x, data[val.x]);
+    }
 
-        SaveData(String.join("\n", data));
+    /**
+     * Rewrite all db without key
+     * @param key Key for delete
+     * @throws IOException Exception when something goes wrong
+     */
+    public void deleteRecord(String key) throws IOException {
+        var key2delete = getRecord(key);
+        if (key2delete == null) return;
+        deleteLineFromFile(key2delete.x);
     }
 
     /**
      * Get value of key in DB
      * @param key key of value
-     * @return null if not found
+     * @return null if not found |
+     * Triple where x - index in file, y - key, z - value
      */
-    public Triple<Integer, String, String> GetValue(String key) throws IOException {
-        var data = LoadData().split("\n");
+    public Triple<Integer, String, String> getRecord(String key) throws IOException {
+        var data = load().split("\n");
         for (var i = 0; i < data.length; i++) {
             var pair = data[i].split(":");
             if (pair[0].equals(key))
@@ -88,41 +79,39 @@ public class Manager {
         return null;
     }
 
-    private void PutLine(int index, String line) throws IOException {
-        var data = LoadData();
+    private void addLine2File(String line) throws IOException {
+        try (var writer = new BufferedWriter(new FileWriter(Path + FileName, true))) {
+            writer.write(line);
+            writer.newLine();
+        }
+    }
+
+    private void putLine2File(int index, String line) throws IOException {
+        var data = load();
         var splitData = data.split("\n");
+        if (index >= splitData.length || index < 0) return;
 
         splitData[index] = line;
         data = String.join("\n", splitData);
 
-        SaveData(data);
+        save(data);
     }
 
-    private void AppendLine(String line) throws IOException {
-        var writer = new FileWriter(Path + FileName);
-        writer.append(line).append("\n");
-        writer.close();
+    private void deleteLineFromFile(int index) throws IOException {
+        var path = Paths.get(Path + FileName);
+        var lines = Files.readAllLines(path);
+
+        if (index >= 0 && index < lines.size()) {
+            lines.remove(index);
+            Files.write(path, lines);
+        } else throw new IndexOutOfBoundsException("Index out of bounds: " + index);
     }
 
-    private String LoadLine(int index) throws IOException {
-        return LoadData().split("\n")[index];
+    private void save(String data) throws IOException {
+        Files.write(Paths.get(Path + FileName), data.getBytes());
     }
 
-    private void SaveData(String data) throws IOException {
-        var writer = new FileWriter(Path + FileName);
-        writer.write(data);
-        writer.close();
-    }
-
-    private String LoadData() throws IOException {
-        var reader = new FileReader(Path + FileName);
-        var scan = new Scanner(reader);
-
-        var data = new StringBuilder();
-        while (scan.hasNextLine())
-            data.append(scan.nextLine());
-
-        reader.close();
-        return data.toString();
+    private String load() throws IOException {
+        return new String(Files.readAllBytes(Paths.get(Path + FileName)));
     }
 }
