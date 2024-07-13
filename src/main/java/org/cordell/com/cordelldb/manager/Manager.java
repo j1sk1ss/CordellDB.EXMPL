@@ -6,16 +6,36 @@ import org.cordell.com.cordelldb.objects.ObjectRecord;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
 
 public class Manager {
-    public Manager(String location, String fileName) {
-        Path = location;
-        FileName = fileName;
+    /**
+     * Init manager by path (Or create, if manager not exists)
+     * @param file Path to manager
+     */
+    public Manager(String file) {
+        dbPath = Paths.get(file);
+        if (!Files.exists(dbPath.toAbsolutePath())) {
+            try {
+                if (!dbPath.toFile().createNewFile()) System.out.println("Error creating file");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
-        var file = new File(Path + FileName);
+    /**
+     * Create new manager in location
+     * @param location Location of manager
+     * @param fileName Manager name (without extension)
+     */
+    public Manager(String location, String fileName) {
+        dbPath = Paths.get(location + fileName);
+
+        var file = new File(location + fileName);
         if (!file.exists()) {
             try {
                 if (!file.createNewFile()) System.out.println("Error creating file");
@@ -32,12 +52,11 @@ public class Manager {
      * @param fileName New filename
      */
     public Manager(Manager source, String location, String fileName) {
-        Path = location;
-        FileName = fileName;
+        dbPath = Paths.get(location + fileName);
 
         try {
-            var sourceFile = new File(source.Path + source.FileName);
-            var destinationFile = new File(Path + FileName);
+            var sourceFile = source.dbPath.toFile();
+            var destinationFile = dbPath.toFile();
             if (!destinationFile.exists()) {
                 try {
                     if (!destinationFile.createNewFile()) System.out.println("Error creating file");
@@ -52,8 +71,7 @@ public class Manager {
         }
     }
 
-    private final String Path;
-    private final String FileName;
+    private final Path dbPath;
 
     /**
      * Set string of key
@@ -180,7 +198,7 @@ public class Manager {
     }
 
     private void addLine2File(String line) throws IOException {
-        try (var writer = new BufferedWriter(new FileWriter(Path + FileName, true))) {
+        try (var writer = new BufferedWriter(new FileWriter(dbPath.toAbsolutePath().toString(), true))) {
             writer.write(line);
             writer.newLine();
         }
@@ -204,12 +222,10 @@ public class Manager {
     }
 
     private void save(List<String> data) throws IOException {
-        var path = Paths.get(Path + FileName);
-        Files.write(path, data);
+        Files.write(dbPath, data);
     }
 
     private List<String> load() throws IOException {
-        var path = Paths.get(Path + FileName);
-        return Files.readAllLines(path);
+        return Files.readAllLines(dbPath);
     }
 }
