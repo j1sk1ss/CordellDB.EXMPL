@@ -1,10 +1,13 @@
 package org.cordell.com.cordelldb.manager;
 
+import org.codehaus.plexus.util.FileUtils;
 import org.cordell.com.cordelldb.common.Triple;
+import org.cordell.com.cordelldb.objects.ObjectRecord;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 
 public class Manager {
@@ -22,33 +25,130 @@ public class Manager {
         }
     }
 
+    /**
+     * Copy manager db to new destination
+     * @param source Source manager
+     * @param location New location
+     * @param fileName New filename
+     */
+    public Manager(Manager source, String location, String fileName) {
+        Path = location;
+        FileName = fileName;
+
+        try {
+            var sourceFile = new File(source.Path + source.FileName);
+            var destinationFile = new File(Path + FileName);
+            if (!destinationFile.exists()) {
+                try {
+                    if (!destinationFile.createNewFile()) System.out.println("Error creating file");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            FileUtils.copyDirectory(sourceFile, destinationFile);
+        } catch (IOException e) {
+            System.out.println("Error creating file");
+        }
+    }
+
     private final String Path;
     private final String FileName;
 
     /**
-     * Add new key
-     * @param key Key
-     * @param value Value
-     * @throws IOException Exception when something goes wrong
-     */
-    public void addRecord(String key, String value) throws IOException {
-        if (getRecord(key) == null)
-            addLine2File(key + ":" + value);
-    }
-
-    /**
-     * Set value of key
+     * Set string of key
      * @param key Key of value
      * @param value New value of key
      * @throws IOException Exception when something goes wrong
      */
-    public void setRecord(String key, String value) throws IOException {
+    public void setString(String key, String value) throws IOException {
         var val = getRecord(key);
-        if (val== null) return;
+        if (val== null) {
+            addLine2File(key + ":" + value);
+            return;
+        }
 
-        var data = load().split("\n");
-        data[val.x] = val.y + ":" + value;
-        putLine2File(val.x, data[val.x]);
+        var lines = load();
+        lines.set(val.x, val.y + ":" + value);
+        putLine2File(val.x, lines.get(val.x));
+    }
+
+    /**
+     * Get string from DB
+     * @param key Key of value
+     * @return String
+     * @throws IOException Exception when something goes wrong
+     */
+    public String getString(String key) throws IOException {
+        var val = getRecord(key);
+        if (val == null) return null;
+        return val.z.asString();
+    }
+
+    /**
+     * Set integer of key
+     * @param key Key of value
+     * @param value New value of key
+     * @throws IOException Exception when something goes wrong
+     */
+    public void setInt(String key, int value) throws IOException {
+        setString(key, Integer.toString(value));
+    }
+
+    /**
+     * Get integer from DB
+     * @param key Key of value
+     * @return Integer
+     * @throws IOException Exception when something goes wrong
+     */
+    public int getInt(String key) throws IOException {
+        var val = getRecord(key);
+        if (val == null) return -1;
+        return val.z.asInteger();
+    }
+
+    /**
+     * Set double of key
+     * @param key Key of value
+     * @param value New value of key
+     * @throws IOException Exception when something goes wrong
+     */
+    public void setDouble(String key, double value) throws IOException {
+        setString(key, Double.toString(value));
+    }
+
+    /**
+     * Get double from DB
+     * @param key Key of value
+     * @return Double
+     * @throws IOException Exception when something goes wrong
+     */
+    public double getDouble(String key) throws IOException {
+        var val = getRecord(key);
+        if (val == null) return -1d;
+        return val.z.asDouble();
+    }
+
+    /**
+     * Set boolean of key
+     * @param key Key of value
+     * @param value New value of key
+     * @throws IOException Exception when something goes wrong
+     */
+    public void setBoolean(String key, boolean value) throws IOException {
+        setString(key, Boolean.toString(value));
+    }
+
+    /**
+     * Get boolean from DB
+     * @param key Key of value
+     * @return Boolean
+     * @throws IOException Exception when something goes wrong
+     */
+    public boolean getBoolean(String key) throws IOException {
+        var val = getRecord(key);
+        if (val == null) return false;
+        return val.z.asBoolean();
     }
 
     /**
@@ -63,17 +163,17 @@ public class Manager {
     }
 
     /**
-     * Get value of key in DB
+     * Get record from DB
      * @param key key of value
      * @return null if not found |
-     * Triple where x - index in file, y - key, z - value
+     * Triple where x - index in file, y - key, z - record
      */
-    public Triple<Integer, String, String> getRecord(String key) throws IOException {
-        var data = load().split("\n");
-        for (var i = 0; i < data.length; i++) {
-            var pair = data[i].split(":");
+    public Triple<Integer, String, ObjectRecord> getRecord(String key) throws IOException {
+        var lines = load();
+        for (var i = 0; i < lines.size(); i++) {
+            var pair = lines.get(i).split(":");
             if (pair[0].equals(key))
-                return new Triple<>(i, pair[0], pair[1]);
+                return new Triple<>(i, pair[0], new ObjectRecord(pair[1]));
         }
 
         return null;
@@ -87,31 +187,29 @@ public class Manager {
     }
 
     private void putLine2File(int index, String line) throws IOException {
-        var data = load();
-        var splitData = data.split("\n");
-        if (index >= splitData.length || index < 0) return;
+        var lines = load();
+        if (index >= lines.size() || index < 0) return;
 
-        splitData[index] = line;
-        data = String.join("\n", splitData);
-
-        save(data);
+        lines.set(index, line);
+        save(lines);
     }
 
     private void deleteLineFromFile(int index) throws IOException {
-        var path = Paths.get(Path + FileName);
-        var lines = Files.readAllLines(path);
-
+        var lines = load();
         if (index >= 0 && index < lines.size()) {
             lines.remove(index);
-            Files.write(path, lines);
-        } else throw new IndexOutOfBoundsException("Index out of bounds: " + index);
+            save(lines);
+        }
+        else throw new IndexOutOfBoundsException("Index out of bounds: " + index);
     }
 
-    private void save(String data) throws IOException {
-        Files.write(Paths.get(Path + FileName), data.getBytes());
+    private void save(List<String> data) throws IOException {
+        var path = Paths.get(Path + FileName);
+        Files.write(path, data);
     }
 
-    private String load() throws IOException {
-        return new String(Files.readAllBytes(Paths.get(Path + FileName)));
+    private List<String> load() throws IOException {
+        var path = Paths.get(Path + FileName);
+        return Files.readAllLines(path);
     }
 }
