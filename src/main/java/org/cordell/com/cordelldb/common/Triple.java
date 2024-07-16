@@ -21,6 +21,7 @@ public class Triple<X, Y, Z> {
         if (other == this) return true;
         if (!(other instanceof Triple)) return false;
 
+        @SuppressWarnings("unchecked")
         Triple<X,Y,Z> other_ = (Triple<X,Y,Z>) other;
 
         return other_.x.equals(this.x) && other_.y.equals(this.y) && other_.z.equals(this.z);

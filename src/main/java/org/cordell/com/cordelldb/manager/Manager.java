@@ -197,6 +197,14 @@ public class Manager {
         return null;
     }
 
+    /**
+     * Get name of manager body file
+     * @return Name of file
+     */
+    private String getName() {
+        return dbPath.getFileName().toString();
+    }
+
     private void addLine2File(String line) throws IOException {
         try (var writer = new BufferedWriter(new FileWriter(dbPath.toAbsolutePath().toString(), true))) {
             writer.write(line);
