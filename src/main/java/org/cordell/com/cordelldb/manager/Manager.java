@@ -201,7 +201,7 @@ public class Manager {
      * Get name of manager body file
      * @return Name of file
      */
-    private String getName() {
+    public String getName() {
         return dbPath.getFileName().toString();
     }
 
