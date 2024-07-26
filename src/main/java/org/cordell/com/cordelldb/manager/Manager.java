@@ -8,6 +8,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -195,6 +196,24 @@ public class Manager {
         }
 
         return null;
+    }
+
+    /**
+     * Get all records with specified value
+     * @param value Value
+     * @return List of records
+     * @throws IOException Exception when something goes wrong
+     */
+    public List<Triple<Integer, String, ObjectRecord>> getKeys(String value) throws IOException {
+        var lines = load();
+        var records = new ArrayList<Triple<Integer, String, ObjectRecord>>();
+        for (var i = 0; i < lines.size(); i++) {
+            var pair = lines.get(i).split(":");
+            if (pair[1].equals(value))
+                records.add(new Triple<>(i, pair[0], new ObjectRecord(pair[1])));
+        }
+
+        return records;
     }
 
     /**
