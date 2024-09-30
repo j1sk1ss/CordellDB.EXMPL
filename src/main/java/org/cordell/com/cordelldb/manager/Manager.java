@@ -3,6 +3,7 @@ package org.cordell.com.cordelldb.manager;
 import org.codehaus.plexus.util.FileUtils;
 import org.cordell.com.cordelldb.common.Triple;
 import org.cordell.com.cordelldb.objects.ObjectRecord;
+import org.cordell.com.cordelldb.threads.SaveThread;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class Manager {
@@ -19,6 +21,8 @@ public class Manager {
      */
     public Manager(String file) {
         dbPath = Paths.get(file);
+        tempararyStorage = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
+
         if (!Files.exists(dbPath.toAbsolutePath())) {
             try {
                 if (!dbPath.toFile().createNewFile()) System.out.println("Error creating file");
@@ -26,6 +30,9 @@ public class Manager {
                 throw new RuntimeException(e);
             }
         }
+
+        var saveThread = new SaveThread(this, 1000);
+        saveThread.start();
     }
 
     /**
@@ -35,6 +42,7 @@ public class Manager {
      */
     public Manager(String location, String fileName) {
         dbPath = Paths.get(location + fileName);
+        tempararyStorage = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
 
         var file = new File(location + fileName);
         if (!file.exists()) {
@@ -44,6 +52,9 @@ public class Manager {
                 throw new RuntimeException(e);
             }
         }
+
+        var saveThread = new SaveThread(this, 1000);
+        saveThread.start();
     }
 
     /**
@@ -54,6 +65,7 @@ public class Manager {
      */
     public Manager(Manager source, String location, String fileName) {
         dbPath = Paths.get(location + fileName);
+        tempararyStorage = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
 
         try {
             var sourceFile = source.dbPath.toFile();
@@ -70,9 +82,13 @@ public class Manager {
         } catch (IOException e) {
             System.out.println("Error creating file");
         }
+
+        var saveThread = new SaveThread(this, 1000);
+        saveThread.start();
     }
 
     private final Path dbPath;
+    private final CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>> tempararyStorage;
 
     /**
      * Set string of key
@@ -82,14 +98,12 @@ public class Manager {
      */
     public void setString(String key, String value) throws IOException {
         var val = getRecord(key);
-        if (val== null) {
-            addLine2File(key + ":" + value);
+        if (val == null) {
+            tempararyStorage.add(new Triple<>(tempararyStorage.size(), key, new ObjectRecord(value)));
             return;
         }
 
-        var lines = load();
-        lines.set(val.x, val.y + ":" + value);
-        putLine2File(val.x, lines.get(val.x));
+        tempararyStorage.set(val.x, new Triple<>(val.x, val.y, new ObjectRecord(value)));
     }
 
     /**
@@ -178,7 +192,7 @@ public class Manager {
     public void deleteRecord(String key) throws IOException {
         var key2delete = getRecord(key);
         if (key2delete == null) return;
-        deleteLineFromFile(key2delete.x);
+        tempararyStorage.remove(key2delete);
     }
 
     /**
@@ -188,14 +202,15 @@ public class Manager {
      * Triple where x - index in file, y - key, z - record
      */
     public Triple<Integer, String, ObjectRecord> getRecord(String key) throws IOException {
-        var lines = load();
-        for (var i = 0; i < lines.size(); i++) {
-            var pair = lines.get(i).split(":");
-            if (pair[0].equals(key))
-                return new Triple<>(i, pair[0], new ObjectRecord(pair[1]));
-        }
+        var answer = tempararyStorage.parallelStream().map(line -> {
+            if (line.y.equals(key)) {
+                return line;
+            } 
 
-        return null;
+            return null;
+        });
+
+        return answer.findAny().get();
     }
 
     /**
@@ -205,13 +220,12 @@ public class Manager {
      * @throws IOException Exception when something goes wrong
      */
     public List<Triple<Integer, String, ObjectRecord>> getKeys(String value) throws IOException {
-        var lines = load();
-        var records = new ArrayList<Triple<Integer, String, ObjectRecord>>();
-        for (var i = 0; i < lines.size(); i++) {
-            var pair = lines.get(i).split(":");
-            if (pair[1].equals(value))
-                records.add(new Triple<>(i, pair[0], new ObjectRecord(pair[1])));
-        }
+        var records = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
+        tempararyStorage.parallelStream().forEach(line -> {
+            if (line.y.equals(value)) {
+                records.add(line);
+            }
+        });
 
         return records;
     }
@@ -224,35 +238,22 @@ public class Manager {
         return dbPath.getFileName().toString();
     }
 
-    private void addLine2File(String line) throws IOException {
-        try (var writer = new BufferedWriter(new FileWriter(dbPath.toAbsolutePath().toString(), true))) {
-            writer.write(line);
-            writer.newLine();
+    public void save() throws IOException {
+        var data2save = new ArrayList<String>();
+        for (var line : tempararyStorage) {
+            data2save.add(line.y + ":" + line.z.asString());
         }
+
+        Files.write(dbPath, data2save);
     }
 
-    private void putLine2File(int index, String line) throws IOException {
-        var lines = load();
-        if (index >= lines.size() || index < 0) return;
+    public void load() throws IOException {
+        var lines = Files.readAllLines(dbPath);
+        tempararyStorage.clear();
 
-        lines.set(index, line);
-        save(lines);
-    }
-
-    private void deleteLineFromFile(int index) throws IOException {
-        var lines = load();
-        if (index >= 0 && index < lines.size()) {
-            lines.remove(index);
-            save(lines);
-        }
-        else throw new IndexOutOfBoundsException("Index out of bounds: " + index);
-    }
-
-    private void save(List<String> data) throws IOException {
-        Files.write(dbPath, data);
-    }
-
-    private List<String> load() throws IOException {
-        return Files.readAllLines(dbPath);
+        lines.parallelStream().forEach(line -> {
+            var pair = line.split(":");
+            tempararyStorage.add(new Triple<>(lines.indexOf(line), pair[0], new ObjectRecord(pair[1])));
+        });
     }
 }
