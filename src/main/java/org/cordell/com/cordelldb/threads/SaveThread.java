@@ -4,14 +4,15 @@ import java.io.IOException;
 
 import org.cordell.com.cordelldb.manager.Manager;
 
+
 public class SaveThread extends Thread {
     public SaveThread(Manager manager, int delay) {
         this.manager = manager;
         this.delay = delay;
     }
 
-    private Manager manager;
-    private int delay;
+    private final Manager manager;
+    private final int delay;
 
     public void run() {
         try {
@@ -23,9 +24,7 @@ public class SaveThread extends Thread {
                     manager.load();
                 }
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
     }

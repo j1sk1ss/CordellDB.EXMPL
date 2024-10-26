@@ -4,3 +4,12 @@ main: org.cordell.com.cordelldb.CordellDB
 api-version: '1.20'
 authors: [ j1sk1ss ]
 description: Light data manager for minecraft plugins
+
+
+commands:
+  cdb_get:
+    usage: "/cdb_get <path> <key>"
+    description: "Get value from DB"
+  cdb_set:
+    usage: "/cdb_set <path> <key> <value>"
+    description: "Set value in DB by key"

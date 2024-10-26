@@ -21,7 +21,7 @@ public class Manager {
      */
     public Manager(String file) {
         dbPath = Paths.get(file);
-        tempararyStorage = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
+        temporaryStorage = new CopyOnWriteArrayList<>();
 
         if (!Files.exists(dbPath.toAbsolutePath())) {
             try {
@@ -42,7 +42,7 @@ public class Manager {
      */
     public Manager(String location, String fileName) {
         dbPath = Paths.get(location + fileName);
-        tempararyStorage = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
+        temporaryStorage = new CopyOnWriteArrayList<>();
 
         var file = new File(location + fileName);
         if (!file.exists()) {
@@ -65,7 +65,7 @@ public class Manager {
      */
     public Manager(Manager source, String location, String fileName) {
         dbPath = Paths.get(location + fileName);
-        tempararyStorage = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
+        temporaryStorage = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
 
         try {
             var sourceFile = source.dbPath.toFile();
@@ -88,7 +88,19 @@ public class Manager {
     }
 
     private final Path dbPath;
-    private final CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>> tempararyStorage;
+    private final CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>> temporaryStorage;
+
+    /**
+     * Return key set from DB
+     * @return Key set
+     */
+    public List<String> getKeySet() {
+        var output = new ArrayList<String>();
+        for (var triple : temporaryStorage)
+            output.add(triple.y());
+
+        return output;
+    }
 
     /**
      * Set string of key
@@ -99,11 +111,11 @@ public class Manager {
     public void setString(String key, String value) throws IOException {
         var val = getRecord(key);
         if (val == null) {
-            tempararyStorage.add(new Triple<>(tempararyStorage.size(), key, new ObjectRecord(value)));
+            temporaryStorage.add(new Triple<>(temporaryStorage.size(), key, new ObjectRecord(value)));
             return;
         }
 
-        tempararyStorage.set(val.x, new Triple<>(val.x, val.y, new ObjectRecord(value)));
+        temporaryStorage.set(val.x(), new Triple<>(val.x(), val.y(), new ObjectRecord(value)));
     }
 
     /**
@@ -115,7 +127,7 @@ public class Manager {
     public String getString(String key) throws IOException {
         var val = getRecord(key);
         if (val == null) return null;
-        return val.z.asString();
+        return val.z().asString();
     }
 
     /**
@@ -137,7 +149,7 @@ public class Manager {
     public int getInt(String key) throws IOException {
         var val = getRecord(key);
         if (val == null) return -1;
-        return val.z.asInteger();
+        return val.z().asInteger();
     }
 
     /**
@@ -159,7 +171,7 @@ public class Manager {
     public double getDouble(String key) throws IOException {
         var val = getRecord(key);
         if (val == null) return -1d;
-        return val.z.asDouble();
+        return val.z().asDouble();
     }
 
     /**
@@ -181,7 +193,7 @@ public class Manager {
     public boolean getBoolean(String key) throws IOException {
         var val = getRecord(key);
         if (val == null) return false;
-        return val.z.asBoolean();
+        return val.z().asBoolean();
     }
 
     /**
@@ -192,7 +204,7 @@ public class Manager {
     public void deleteRecord(String key) throws IOException {
         var key2delete = getRecord(key);
         if (key2delete == null) return;
-        tempararyStorage.remove(key2delete);
+        temporaryStorage.remove(key2delete);
     }
 
     /**
@@ -202,8 +214,8 @@ public class Manager {
      * Triple where x - index in file, y - key, z - record
      */
     public Triple<Integer, String, ObjectRecord> getRecord(String key) throws IOException {
-        var answer = tempararyStorage.parallelStream().map(line -> {
-            if (line.y.equals(key)) {
+        var answer = temporaryStorage.parallelStream().map(line -> {
+            if (line.y().equals(key)) {
                 return line;
             } 
 
@@ -221,8 +233,8 @@ public class Manager {
      */
     public List<Triple<Integer, String, ObjectRecord>> getKeys(String value) throws IOException {
         var records = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
-        tempararyStorage.parallelStream().forEach(line -> {
-            if (line.y.equals(value)) {
+        temporaryStorage.parallelStream().forEach(line -> {
+            if (line.y().equals(value)) {
                 records.add(line);
             }
         });
@@ -240,8 +252,8 @@ public class Manager {
 
     public void save() throws IOException {
         var data2save = new ArrayList<String>();
-        for (var line : tempararyStorage) {
-            data2save.add(line.y + ":" + line.z.asString());
+        for (var line : temporaryStorage) {
+            data2save.add(line.y() + ":" + line.z().asString());
         }
 
         Files.write(dbPath, data2save);
@@ -249,11 +261,11 @@ public class Manager {
 
     public void load() throws IOException {
         var lines = Files.readAllLines(dbPath);
-        tempararyStorage.clear();
+        temporaryStorage.clear();
 
         lines.parallelStream().forEach(line -> {
             var pair = line.split(":");
-            tempararyStorage.add(new Triple<>(lines.indexOf(line), pair[0], new ObjectRecord(pair[1])));
+            temporaryStorage.add(new Triple<>(lines.indexOf(line), pair[0], new ObjectRecord(pair[1])));
         });
     }
 }

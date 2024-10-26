@@ -1,15 +1,6 @@
 package org.cordell.com.cordelldb.common;
 
-public class Triple<X, Y, Z> {
-    public Triple(X x, Y y, Z z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-    public final X x;
-    public final Y y;
-    public final Z z;
+public record Triple<X, Y, Z>(X x, Y y, Z z) {
 
     @Override
     public String toString() {
@@ -22,19 +13,9 @@ public class Triple<X, Y, Z> {
         if (!(other instanceof Triple)) return false;
 
         @SuppressWarnings("unchecked")
-        Triple<X,Y,Z> other_ = (Triple<X,Y,Z>) other;
+        Triple<X, Y, Z> other_ = (Triple<X, Y, Z>) other;
 
         return other_.x.equals(this.x) && other_.y.equals(this.y) && other_.z.equals(this.z);
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((x == null) ? 0 : x.hashCode());
-        result = prime * result + ((y == null) ? 0 : y.hashCode());
-        result = prime * result + ((z == null) ? 0 : z.hashCode());
-
-        return result;
-    }
 }

@@ -6,7 +6,7 @@
 
   <groupId>org.cordell.com</groupId>
   <artifactId>CordellDB.EXMPL</artifactId>
-  <version>1.0-SHAPSHOT</version>
+  <version>1.2</version>
   <packaging>jar</packaging>
 
   <name>CordellDB.EXMPL</name>
