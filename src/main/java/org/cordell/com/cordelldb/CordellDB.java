@@ -14,7 +14,7 @@ public final class CordellDB extends JavaPlugin {
         for (var command : List.of("cdb_get", "cdb_set"))
             Objects.requireNonNull(getCommand(command)).setExecutor(command_manager);
 
-        System.out.println("CordellDB Plugin Enabled");
+        System.out.println("CordellDB 2.0 Plugin Enabled");
     }
 
     @Override

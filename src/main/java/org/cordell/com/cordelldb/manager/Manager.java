@@ -6,11 +6,12 @@ import org.cordell.com.cordelldb.objects.ObjectRecord;
 import org.cordell.com.cordelldb.threads.SaveThread;
 
 import java.io.*;
-import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
@@ -250,21 +251,29 @@ public class Manager {
     }
 
     public void save() throws IOException {
-        var data2save = new ArrayList<String>();
+        var linesToSave = new ArrayList<String>();
         for (var line : temporaryStorage) {
-            data2save.add(line.y() + ":" + line.z().asString());
+            linesToSave.add(line.y() + ":" + line.z().asString());
         }
 
-        Files.write(dbPath, data2save);
+        Files.write(dbPath, linesToSave, StandardOpenOption.APPEND);
     }
 
     public void load() throws IOException {
         var lines = Files.readAllLines(dbPath);
         temporaryStorage.clear();
 
-        lines.parallelStream().forEach(line -> {
-            var pair = line.split(":");
-            temporaryStorage.add(new Triple<>(lines.indexOf(line), pair[0], new ObjectRecord(pair[1])));
-        });
+        for (int i = 0; i < lines.size(); i++) {
+            try {
+                var line = lines.get(i);
+                var pair = line.split(":");
+
+                if (pair.length != 2) continue;
+                temporaryStorage.add(new Triple<>(i, pair[0], new ObjectRecord(pair[1])));
+            }
+            catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
     }
 }
