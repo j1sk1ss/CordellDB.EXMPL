@@ -13,11 +13,12 @@ public class SaveThread extends Thread {
 
     private final Manager manager;
     private final int delay;
+    private Boolean isAlive = true;
 
     public void run() {
         try {
             manager.load();
-            while (true) {
+            while (isAlive) {
                 manager.save();
                 Thread.sleep(delay);
 
@@ -28,5 +29,9 @@ public class SaveThread extends Thread {
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void kill() {
+        isAlive = false;
     }
 } 

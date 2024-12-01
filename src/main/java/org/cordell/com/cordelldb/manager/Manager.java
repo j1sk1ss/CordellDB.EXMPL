@@ -6,7 +6,6 @@ import org.cordell.com.cordelldb.objects.ObjectRecord;
 import org.cordell.com.cordelldb.threads.SaveThread;
 
 import java.io.*;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.nio.file.Path;
 import java.nio.file.Files;
@@ -32,7 +31,7 @@ public class Manager {
             }
         }
 
-        var saveThread = new SaveThread(this, 10000);
+        saveThread = new SaveThread(this, 100000);
         saveThread.start();
     }
 
@@ -54,7 +53,7 @@ public class Manager {
             }
         }
 
-        var saveThread = new SaveThread(this, 10000);
+        saveThread= new SaveThread(this, 100000);
         saveThread.start();
     }
 
@@ -84,12 +83,13 @@ public class Manager {
             System.out.println("Error creating file");
         }
 
-        var saveThread = new SaveThread(this, 1000);
+        saveThread = new SaveThread(this, 1000);
         saveThread.start();
     }
 
     private final Path dbPath;
     private final CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>> temporaryStorage;
+    private SaveThread saveThread;
 
     /**
      * Return key set from DB
@@ -251,7 +251,6 @@ public class Manager {
     }
 
     public void save() throws IOException {
-        System.out.println("Saving data to " + dbPath);
         var linesToSave = new ArrayList<String>();
         for (var line : temporaryStorage) {
             linesToSave.add(line.y() + ":" + line.z().asString());
@@ -261,7 +260,6 @@ public class Manager {
     }
 
     public void load() throws IOException {
-        System.out.println("Loading data from " + dbPath);
         var lines = Files.readAllLines(dbPath);
         temporaryStorage.clear();
 
