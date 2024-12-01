@@ -17,6 +17,7 @@ public class SaveThread extends Thread {
     public void run() {
         try {
             while (true) {
+                System.out.println("[CDB] Saving...");
                 manager.save();
                 Thread.sleep(delay);
 

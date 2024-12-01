@@ -31,7 +31,7 @@ public class Manager {
             }
         }
 
-        var saveThread = new SaveThread(this, 1000);
+        var saveThread = new SaveThread(this, 10000);
         saveThread.start();
     }
 
@@ -53,7 +53,7 @@ public class Manager {
             }
         }
 
-        var saveThread = new SaveThread(this, 1000);
+        var saveThread = new SaveThread(this, 10000);
         saveThread.start();
     }
 
@@ -65,7 +65,7 @@ public class Manager {
      */
     public Manager(Manager source, String location, String fileName) {
         dbPath = Paths.get(location + fileName);
-        temporaryStorage = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
+        temporaryStorage = new CopyOnWriteArrayList<>();
 
         try {
             var sourceFile = source.dbPath.toFile();
@@ -144,9 +144,8 @@ public class Manager {
      * Get integer from DB
      * @param key Key of value
      * @return Integer
-     * @throws IOException Exception when something goes wrong
      */
-    public int getInt(String key) throws IOException {
+    public int getInt(String key) {
         var val = getRecord(key);
         if (val == null) return -1;
         return val.z().asInteger();
@@ -166,9 +165,8 @@ public class Manager {
      * Get double from DB
      * @param key Key of value
      * @return Double
-     * @throws IOException Exception when something goes wrong
      */
-    public double getDouble(String key) throws IOException {
+    public double getDouble(String key) {
         var val = getRecord(key);
         if (val == null) return -1d;
         return val.z().asDouble();
@@ -188,9 +186,8 @@ public class Manager {
      * Get boolean from DB
      * @param key Key of value
      * @return Boolean
-     * @throws IOException Exception when something goes wrong
      */
-    public boolean getBoolean(String key) throws IOException {
+    public boolean getBoolean(String key) {
         var val = getRecord(key);
         if (val == null) return false;
         return val.z().asBoolean();
@@ -199,9 +196,8 @@ public class Manager {
     /**
      * Rewrite all db without key
      * @param key Key for delete
-     * @throws IOException Exception when something goes wrong
      */
-    public void deleteRecord(String key) throws IOException {
+    public void deleteRecord(String key) {
         var key2delete = getRecord(key);
         if (key2delete == null) return;
         temporaryStorage.remove(key2delete);
@@ -214,24 +210,27 @@ public class Manager {
      * Triple where x - index in file, y - key, z - record
      */
     public Triple<Integer, String, ObjectRecord> getRecord(String key) {
-        var answer = temporaryStorage.parallelStream().map(line -> {
-            if (line.y().equals(key)) {
-                return line;
-            } 
+        try {
+            if (temporaryStorage == null || temporaryStorage.isEmpty()) {
+                return null;
+            }
 
+            return temporaryStorage.parallelStream()
+                    .filter(line -> line.y().equals(key))
+                    .findFirst()
+                    .orElse(null);
+        }
+        catch (Exception e) {
             return null;
-        });
-
-        return answer.findFirst().orElse(null);
+        }
     }
 
     /**
      * Get all records with specified value
      * @param value Value
      * @return List of records
-     * @throws IOException Exception when something goes wrong
      */
-    public List<Triple<Integer, String, ObjectRecord>> getKeys(String value) throws IOException {
+    public List<Triple<Integer, String, ObjectRecord>> getKeys(String value) {
         var records = new CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>>();
         temporaryStorage.parallelStream().forEach(line -> {
             if (line.y().equals(value)) {
