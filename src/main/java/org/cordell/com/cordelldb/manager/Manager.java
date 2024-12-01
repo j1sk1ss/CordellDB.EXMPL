@@ -213,7 +213,7 @@ public class Manager {
      * @return null if not found |
      * Triple where x - index in file, y - key, z - record
      */
-    public Triple<Integer, String, ObjectRecord> getRecord(String key) throws IOException {
+    public Triple<Integer, String, ObjectRecord> getRecord(String key) {
         var answer = temporaryStorage.parallelStream().map(line -> {
             if (line.y().equals(key)) {
                 return line;
@@ -222,7 +222,7 @@ public class Manager {
             return null;
         });
 
-        return answer.findAny().get();
+        return answer.findFirst().orElse(null);
     }
 
     /**

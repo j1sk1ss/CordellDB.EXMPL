@@ -4,6 +4,7 @@ main: org.cordell.com.cordelldb.CordellDB
 api-version: '1.20'
 authors: [ j1sk1ss ]
 description: Light data manager for minecraft plugins
+prefix: CordellDB
 
 
 commands:
