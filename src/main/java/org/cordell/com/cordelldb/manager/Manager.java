@@ -251,28 +251,34 @@ public class Manager {
     }
 
     public void save() throws IOException {
+        System.out.println("Saving data to " + dbPath);
         var linesToSave = new ArrayList<String>();
         for (var line : temporaryStorage) {
             linesToSave.add(line.y() + ":" + line.z().asString());
         }
 
-        Files.write(dbPath, linesToSave, StandardOpenOption.APPEND);
+        Files.write(dbPath, linesToSave);
     }
 
     public void load() throws IOException {
+        System.out.println("Loading data from " + dbPath);
         var lines = Files.readAllLines(dbPath);
         temporaryStorage.clear();
 
         for (int i = 0; i < lines.size(); i++) {
             try {
-                var line = lines.get(i);
-                var pair = line.split(":");
+                var line = lines.get(i).trim();
+                if (line.isEmpty()) continue;
 
-                if (pair.length != 2) continue;
+                var pair = line.split(":", 2);
+                if (pair.length != 2) {
+                    System.out.println("Skipping invalid line: " + line);
+                    continue;
+                }
+
                 temporaryStorage.add(new Triple<>(i, pair[0], new ObjectRecord(pair[1])));
-            }
-            catch (Exception e) {
-                System.out.println(e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Error processing line " + i + ": " + e.getMessage());
             }
         }
     }
