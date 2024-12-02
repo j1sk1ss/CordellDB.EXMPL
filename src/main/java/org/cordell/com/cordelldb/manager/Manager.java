@@ -89,7 +89,7 @@ public class Manager {
 
     private final Path dbPath;
     private final CopyOnWriteArrayList<Triple<Integer, String, ObjectRecord>> temporaryStorage;
-    private SaveThread saveThread;
+    private final SaveThread saveThread;
 
     /**
      * Return key set from DB
@@ -279,5 +279,9 @@ public class Manager {
                 System.out.println("Error processing line " + i + ": " + e.getMessage());
             }
         }
+    }
+
+    public void stop() {
+        saveThread.kill();
     }
 }
