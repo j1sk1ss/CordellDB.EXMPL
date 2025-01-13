@@ -17,7 +17,6 @@ public class SaveThread extends Thread {
 
     public void run() {
         try {
-            manager.load();
             while (isAlive) {
                 manager.save();
                 Thread.sleep(delay);

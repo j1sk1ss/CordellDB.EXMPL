@@ -30,6 +30,14 @@ public class CommandManager implements CommandExecutor {
                     throw new RuntimeException(e);
                 }
             }
+            else if (label.equalsIgnoreCase("cdb_sync")) {
+                var manager = new Manager(args[0]);
+                try {
+                    manager.save();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 
             return true;
         }

@@ -11,10 +11,10 @@ public final class CordellDB extends JavaPlugin {
     @Override
     public void onEnable() {
         var command_manager = new CommandManager();
-        for (var command : List.of("cdb_get", "cdb_set"))
+        for (var command : List.of("cdb_get", "cdb_set", "cdb_sync"))
             Objects.requireNonNull(getCommand(command)).setExecutor(command_manager);
 
-        System.out.println("CordellDB 2.1 Plugin Enabled");
+        System.out.println("CordellDB 2.2a Plugin Enabled");
     }
 
     @Override

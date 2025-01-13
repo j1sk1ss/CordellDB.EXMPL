@@ -14,3 +14,6 @@ commands:
   cdb_set:
     usage: "/cdb_set <path> <key> <value>"
     description: "Set value in DB by key"
+  cdb_sync:
+    usage: "/cdb_sync <path>"
+    description: "Save data to disk immediately"
