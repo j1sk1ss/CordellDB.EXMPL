@@ -20,6 +20,7 @@ public class Manager {
      * @param file Path to manager
      */
     public Manager(String file) {
+        System.out.println("Manager: " + file + " init");
         dbPath = Paths.get(file);
         temporaryStorage = new CopyOnWriteArrayList<>();
 
@@ -41,6 +42,7 @@ public class Manager {
      * @param fileName Manager name (without extension)
      */
     public Manager(String location, String fileName) {
+        System.out.println("Manager: " + location + " init");
         dbPath = Paths.get(location + fileName);
         temporaryStorage = new CopyOnWriteArrayList<>();
 
@@ -64,6 +66,7 @@ public class Manager {
      * @param fileName New filename
      */
     public Manager(Manager source, String location, String fileName) {
+        System.out.println("Manager: " + location + " init");
         dbPath = Paths.get(location + fileName);
         temporaryStorage = new CopyOnWriteArrayList<>();
 

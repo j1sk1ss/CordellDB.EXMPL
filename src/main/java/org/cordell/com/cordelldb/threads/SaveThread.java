@@ -19,10 +19,12 @@ public class SaveThread extends Thread {
         try {
             while (isAlive) {
                 manager.save();
+                System.out.println("Saving " + manager.getName());
                 Thread.sleep(delay);
 
                 synchronized (manager) {
                     manager.load();
+                    System.out.println("Loaded " + manager.getName());
                 }
             }
         } catch (InterruptedException | IOException e) {

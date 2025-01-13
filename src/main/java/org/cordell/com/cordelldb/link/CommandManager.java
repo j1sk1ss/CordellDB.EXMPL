@@ -17,7 +17,9 @@ public class CommandManager implements CommandExecutor {
             if (label.equalsIgnoreCase("cdb_get")) {
                 var manager = new Manager(args[0]);
                 try {
+                    manager.load();
                     player.sendMessage(manager.getString(args[1]));
+                    manager.stop();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -26,6 +28,8 @@ public class CommandManager implements CommandExecutor {
                 var manager = new Manager(args[0]);
                 try {
                     manager.setString(args[1], args[2]);
+                    manager.save();
+                    manager.stop();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -34,6 +38,7 @@ public class CommandManager implements CommandExecutor {
                 var manager = new Manager(args[0]);
                 try {
                     manager.save();
+                    manager.stop();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
