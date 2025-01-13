@@ -31,6 +31,13 @@ public class Manager {
                 throw new RuntimeException(e);
             }
         }
+        else {
+            try {
+                load();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         saveThread = new SaveThread(this, 100000);
         saveThread.start();
@@ -50,6 +57,13 @@ public class Manager {
         if (!file.exists()) {
             try {
                 if (!file.createNewFile()) System.out.println("Error creating file");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else {
+            try {
+                load();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

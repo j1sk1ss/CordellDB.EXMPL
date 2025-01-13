@@ -17,11 +17,12 @@ public class CommandManager implements CommandExecutor {
             if (label.equalsIgnoreCase("cdb_get")) {
                 var manager = new Manager(args[0]);
                 try {
-                    manager.load();
                     player.sendMessage(manager.getString(args[1]));
-                    manager.stop();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+                }
+                finally {
+                    manager.stop();
                 }
             }
             else if (label.equalsIgnoreCase("cdb_set")) {
@@ -29,18 +30,22 @@ public class CommandManager implements CommandExecutor {
                 try {
                     manager.setString(args[1], args[2]);
                     manager.save();
-                    manager.stop();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+                }
+                finally {
+                    manager.stop();
                 }
             }
             else if (label.equalsIgnoreCase("cdb_sync")) {
                 var manager = new Manager(args[0]);
                 try {
                     manager.save();
-                    manager.stop();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+                }
+                finally {
+                    manager.stop();
                 }
             }
 
